@@ -620,11 +620,12 @@ const browser = await chromium.launch();
 
   /* Sayfa çevirme: bağlantıya tıklayınca geçiş animasyonlu da olsa yeni
      sayfa açılıyor. */
-  /* domcontentloaded: load olayı dış yazı tipi isteğini bekliyor, geçişle
-     ilgisi yok. */
+  /* Yalnızca adresin değişmesi bekleniyor ("commit"): load ve
+     DOMContentLoaded, dış yazı tipi isteği yavaşsa dakikalarca gecikebiliyor
+     ve bunun sayfa çevirmeyle ilgisi yok. */
   await page.click('.nav a[href="notlar.html"]');
-  await page.waitForURL(/notlar\.html$/, { timeout: 5000, waitUntil: "domcontentloaded" });
-  await page.waitForSelector("[data-cat]");
+  await page.waitForURL(/notlar\.html$/, { timeout: 5000, waitUntil: "commit" });
+  await page.waitForSelector("[data-cat]", { state: "attached" });
   ok((await page.locator("[data-cat]").count()) > 0, "sayfa çevirme geçişiyle yeni sayfa açılıyor");
   const folio = await page.evaluate(() => getComputedStyle(document.querySelector(".folio-num"), "::after").content);
   ok(folio.includes("4"), `sayfa numarası doğru (${folio})`);

@@ -1166,8 +1166,10 @@ body[data-page='privacy'] .folio-num::after { content: '6 —'; }
 
 /* Sayfa çevirme: sayfalar arası geçişte eski yaprak sol kenarından kalkıp
    dönüyor, yenisi altında bekliyor. Tarayıcı desteklemiyorsa düz geçiş. */
-@view-transition { navigation: auto; }
 @media (prefers-reduced-motion: no-preference) {
+  /* Kural medya sorgusunun içinde: hareketi azaltan kullanıcı tarayıcının
+     varsayılan soluklaşmasını da görmesin. */
+  @view-transition { navigation: auto; }
   ::view-transition-image-pair(root) { perspective: 1600px; isolation: isolate; }
   ::view-transition-old(root) {
     z-index: 2;
