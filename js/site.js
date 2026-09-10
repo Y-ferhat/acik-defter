@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Site davranışı — dil, tema, dil menüsü.
+   Site davranışı — dil, tema, etkin sekme.
 
    Tercihler sayfa boyanmadan ÖNCE her sayfanın <head>'indeki küçük script
    tarafından uygulanır. Buradaki kod o kararı değiştirmez, sadece metinleri
@@ -109,12 +109,34 @@
     });
   }
 
+  /* Tema değişince yeni ışık düğmeden doğru yayılıyor: View Transitions
+     API varsa sayfanın eski hâli anlık görüntü olarak kalıyor, yenisi
+     düğmenin olduğu noktadan büyüyen bir daireyle açılıyor (CSS'teki
+     lamp-bloom). API yoksa ya da hareket azaltılmışsa anında geçiş.
+
+     Öznitelik startViewTransition'ın geri çağrısında yazılıyor; bu yüzden
+     hareketi azaltmayan tarayıcıda değişiklik bir kare gecikebilir. */
+  function switchTheme(theme, btn) {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || typeof document.startViewTransition !== "function") {
+      applyTheme(theme);
+      return;
+    }
+    var r = btn.getBoundingClientRect();
+    root.style.setProperty("--tx", r.left + r.width / 2 + "px");
+    root.style.setProperty("--ty", r.top + r.height / 2 + "px");
+    root.classList.add("theme-vt");
+    var t = document.startViewTransition(function () { applyTheme(theme); });
+    t.finished.then(done, done);
+    function done() { root.classList.remove("theme-vt"); }
+  }
+
   function initTheme() {
     applyTheme(resolvedTheme());
 
     document.querySelectorAll(".theme-toggle").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        applyTheme(resolvedTheme() === "dark" ? "light" : "dark");
+        switchTheme(resolvedTheme() === "dark" ? "light" : "dark", btn);
       });
     });
 

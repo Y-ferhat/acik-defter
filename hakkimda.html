@@ -14,8 +14,8 @@ d.lang=l;d.dir=(l==="fa")?"rtl":"ltr";
 <meta name="description" content="Farhad Yaqoobi kimdir, ne öğreniyor, nasıl ulaşılır.">
 <link rel="canonical" href="https://ferhat-yasinoglu.github.io/acik-defter/hakkimda.html">
 <meta name="author" content="Farhad Yaqoobi">
-<meta name="theme-color" content="#f6f5fb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0a0a12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#2f2822" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15120f" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Açık Defter">
 <meta property="og:locale" content="tr_TR">
@@ -31,7 +31,7 @@ d.lang=l;d.dir=(l==="fa")?"rtl":"ltr";
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Vazirmatn:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Vazirmatn:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-page="about">
@@ -40,9 +40,9 @@ d.lang=l;d.dir=(l==="fa")?"rtl":"ltr";
 
   <header class="masthead">
     <div class="wrap masthead-inner">
-      <a class="wordmark" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#gm)"/><g fill="#fff"><rect x="8" y="8.7" width="16" height="2.6" rx="1.3"/><rect x="8" y="14.7" width="16" height="2.6" rx="1.3"/><rect x="8" y="20.7" width="9.5" height="2.6" rx="1.3"/></g></svg><span>Açık Defter</span></a>
+      <a class="wordmark" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="2.5" width="22" height="25" rx="2.5" fill="#cfc4ad" transform="rotate(6 18 15)"/><rect x="3.5" y="4" width="22" height="25" rx="2.5" fill="#fdfaf3" stroke="#1b2540" stroke-width="1.5"/><path d="M9 4v25" stroke="#a8362c" stroke-width="1.3"/><path d="M12.5 11.5h9M12.5 16.5h9M12.5 21.5h5.5" stroke="#2b4a8f" stroke-width="1.7" stroke-linecap="round"/></svg><span>Açık Defter</span></a>
 
-      <nav class="nav">
+      <nav class="nav" data-i18n-aria-label="aria_nav" aria-label="Sayfalar">
         <a href="index.html" data-i18n="nav_home">Ana Sayfa</a>
         <a href="yolculugum.html" data-i18n="nav_journey">Yolculuğum</a>
         <a href="projeler.html" data-i18n="nav_projects">Projeler</a>
@@ -53,11 +53,11 @@ d.lang=l;d.dir=(l==="fa")?"rtl":"ltr";
       <div class="tools">
         <div class="langs" data-i18n-aria-label="aria_lang" aria-label="Dili değiştir" role="group">
           <button type="button" data-lang="tr" aria-current="true">TR</button>
-          <span class="sep" aria-hidden="true">|</span>
+          <span class="sep" aria-hidden="true">·</span>
           <button type="button" data-lang="en" aria-current="false">EN</button>
-          <span class="sep" aria-hidden="true">|</span>
+          <span class="sep" aria-hidden="true">·</span>
           <button type="button" data-lang="de" aria-current="false">DE</button>
-          <span class="sep" aria-hidden="true">|</span>
+          <span class="sep" aria-hidden="true">·</span>
           <button type="button" data-lang="fa" aria-current="false">FA</button>
         </div>
         <button type="button" class="tool theme-toggle" aria-pressed="false" data-i18n-aria-label="aria_theme" aria-label="Temayı değiştir">
@@ -71,7 +71,7 @@ d.lang=l;d.dir=(l==="fa")?"rtl":"ltr";
   <main id="main">
     <section class="wrap page-head">
       <span class="label" data-i18n="nav_about">Hakkımda</span>
-      <h1 data-i18n="nav_about">Hakkımda</h1>
+      <h1 class="ink-line" data-i18n="nav_about">Hakkımda</h1>
       <p class="lead" data-i18n="about_lead">Kısaca: Almanya'da IT okuyan, çoğunlukla gece kod yazan biri.</p>
     </section>
 
@@ -98,6 +98,7 @@ d.lang=l;d.dir=(l==="fa")?"rtl":"ltr";
 
     <section class="wrap section">
       <div class="card measure">
+        <span class="tape" aria-hidden="true"></span>
         <h2 data-i18n="contact_title">Bana yaz</h2>
         <p data-i18n="contact_text">Web, Firebase ya da bot işleriyle ilgili bir şey sormak istersen e-posta en hızlısı. Genellikle bir iki gün içinde dönüyorum.</p>
         <div class="links-line">
@@ -112,7 +113,7 @@ d.lang=l;d.dir=(l==="fa")?"rtl":"ltr";
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <div class="footer-mark">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#gf)"/><g fill="#fff"><rect x="8" y="8.7" width="16" height="2.6" rx="1.3"/><rect x="8" y="14.7" width="16" height="2.6" rx="1.3"/><rect x="8" y="20.7" width="9.5" height="2.6" rx="1.3"/></g></svg>
+        <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="2.5" width="22" height="25" rx="2.5" fill="#cfc4ad" transform="rotate(6 18 15)"/><rect x="3.5" y="4" width="22" height="25" rx="2.5" fill="#fdfaf3" stroke="#1b2540" stroke-width="1.5"/><path d="M9 4v25" stroke="#a8362c" stroke-width="1.3"/><path d="M12.5 11.5h9M12.5 16.5h9M12.5 21.5h5.5" stroke="#2b4a8f" stroke-width="1.7" stroke-linecap="round"/></svg>
         <div>
           <p data-i18n="footer_tagline">Bir IT öğrencisinin açık defteri.</p>
           <p class="footer-note" data-i18n="footer_built">Çerçevesiz, derleme adımsız. Kaynağı açık.</p>
@@ -126,12 +127,13 @@ d.lang=l;d.dir=(l==="fa")?"rtl":"ltr";
         <a href="gizlilik.html" data-i18n="footer_privacy">Gizlilik</a>
         <a href="https://github.com/Ferhat-Yasinoglu/acik-defter" rel="noopener" target="_blank" data-i18n="footer_source">Bu sitenin kaynağı</a>
       </div>
+      <p class="folio" aria-hidden="true"><span class="folio-num"></span></p>
     </div>
   </footer>
 
   <script src="js/i18n.js"></script>
   <script src="js/site.js"></script>
-  <script src="js/reveal.js"></script>
+  <script src="js/motion.js"></script>
   <script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});</script>
 </body>
 </html>

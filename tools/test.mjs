@@ -7,7 +7,14 @@
    check.mjs dosyaları okuyup tutarlılığa bakıyor; burası siteyi gerçekten
    açıp davranışa bakıyor: süzgeç, açılır bölümler, tema ve dilin sayfa
    geçişinde korunması, JavaScript kapalıyken okunabilirlik, klavye
-   erişimi ve service worker'ın çevrimdışı gerçekten çalışması.
+   erişimi, hareketin yalnızca istenince çalışması ve service worker'ın
+   çevrimdışı gerçekten çalışması.
+
+   Ölçüm yapan bloklar (yükseklik, taşma, kontrast, dokunma hedefi) hareketi
+   azaltılmış bağlamda açılıyor: onlar son yerleşimi ölçüyor, belirme
+   animasyonunun ortasında yakalanmış bir kareyi değil. Yazı tipleri de
+   ölçümden önce bekleniyor; geç gelen bir yazı tipi çubuğun boyunu
+   değiştirebiliyor.
 
    Kendi statik sunucusunu açar; ayrıca bir şey çalıştırmak gerekmez.
    ========================================================================== */
@@ -62,7 +69,9 @@ const browser = await chromium.launch();
 
 /* ------------------------------------------ süzgeç, ayrıntı, tema, dil */
 {
-  const ctx = await browser.newContext();
+  /* Hareket azaltılmış: tema düğmesi öznitelikleri anında yazıyor, animasyon
+     yolu aşağıda ayrıca deneniyor. */
+  const ctx = await browser.newContext({ reducedMotion: "reduce" });
   const page = await ctx.newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -138,12 +147,13 @@ const browser = await chromium.launch();
   /* Dil başına tek sayfa açıp yalnızca pencereyi yeniden boyutlandırıyoruz:
      her genişlik için ayrı bağlam açmak testi dakikalarca sürdürüyordu. */
   for (const lang of LANGS) {
-    const ctx = await browser.newContext({ viewport: { width: WIDTHS[0], height: 800 } });
+    const ctx = await browser.newContext({ viewport: { width: WIDTHS[0], height: 800 }, reducedMotion: "reduce" });
     const page = await ctx.newPage();
     await page.goto(BASE, { waitUntil: "domcontentloaded" });
     await page.evaluate((l) => localStorage.setItem("ad-lang", l), lang);
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForSelector(".langs");
+    await page.evaluate(() => document.fonts.ready);
 
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: 800 });
@@ -176,11 +186,12 @@ const browser = await chromium.launch();
   const headingIssues = [];
   const smallTargets = [];
 
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 800 } });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, reducedMotion: "reduce" });
   const page = await ctx.newPage();
 
   for (const path of PAGES) {
     await page.goto(BASE + path, { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => document.fonts.ready);
 
     const m = await page.evaluate(() => {
       const levels = [...document.querySelectorAll("h1,h2,h3,h4,h5,h6")].map((h) => +h.tagName[1]);
@@ -227,23 +238,30 @@ const browser = await chromium.launch();
    bütün siteyi etkilediği için sessizce geri kayabilir; ölçüp bağlıyoruz.
 
    Ölçüm gradyanla boyanmış yazıyı ve gradyan zeminleri atlıyor: onların
-   oranı tek bir renk çiftinden çıkmıyor, göze bakmak gerekiyor. */
+   oranı tek bir renk çiftinden çıkmıyor, göze bakmak gerekiyor.
+
+   Atlanan öğe sayısı da bağlı: kağıt dokusu ya da satır çizgisi gövdeye
+   arka plan görseli olarak konsa bu test sessizce hiçbir şeyi ölçmez olurdu.
+   Dokular bu yüzden sözde öğelerde duruyor (bkz. css/style.css başı); bir
+   gün gerçek bir öğeye taşınırsa burada yakalanır. */
 {
   const PAGES = ["index.html", "yolculugum.html", "projeler.html", "notlar.html", "hakkimda.html", "gizlilik.html"];
   const fails = [];
+  let skipped = 0;
 
   const srgb = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
   const lum = ([r, g, b]) => 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
   const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
 
   for (const scheme of ["light", "dark"]) {
-    const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, colorScheme: scheme });
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, colorScheme: scheme, reducedMotion: "reduce" });
     const page = await ctx.newPage();
 
     for (const path of PAGES) {
       await page.goto(BASE + path, { waitUntil: "domcontentloaded" });
+      await page.evaluate(() => document.fonts.ready);
 
-      const rows = await page.evaluate(() => {
+      const measured = await page.evaluate(() => {
         /* rgb() 0-255 verir, color(srgb ...) 0-1 — ikincisini ölçeklendir */
         const rgba = (s) => {
           if (!s) return null;
@@ -253,13 +271,14 @@ const browser = await chromium.launch();
           return [n[0] * k, n[1] * k, n[2] * k, n.length > 3 ? n[3] : 1];
         };
         const out = [];
+        let dropped = 0;
         for (const el of document.querySelectorAll("body *")) {
           const cs = getComputedStyle(el);
           if (cs.visibility === "hidden" || cs.display === "none") continue;
           if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
 
           const fg = rgba(cs.color);
-          if (!fg || fg[3] === 0) continue; /* gradyanla boyanmış yazı */
+          if (!fg || fg[3] === 0) { dropped++; continue; } /* gradyanla boyanmış yazı */
 
           /* zemin: html'den elemana kadar bütün katmanları alfa ile bindir */
           const chain = [];
@@ -273,7 +292,7 @@ const browser = await chromium.launch();
             if (!c || c[3] === 0) continue;
             bg = [0, 1, 2].map((i) => c[i] * c[3] + bg[i] * (1 - c[3]));
           }
-          if (gradient) continue;
+          if (gradient) { dropped++; continue; }
 
           const a = fg[3];
           out.push({
@@ -282,8 +301,10 @@ const browser = await chromium.launch();
             bg, size: parseFloat(cs.fontSize), weight: +cs.fontWeight,
           });
         }
-        return out;
+        return { out, dropped };
       });
+      const rows = measured.out;
+      skipped += measured.dropped;
 
       for (const t of rows) {
         const large = t.size >= 24 || (t.size >= 18.66 && t.weight >= 700);
@@ -301,6 +322,7 @@ const browser = await chromium.launch();
     `metin kontrastı iki temada da AA eşiğini geçiyor` +
       (fails.length ? ` — kalanlar: ${[...new Set(fails)].slice(0, 4).join(", ")}` : "")
   );
+  ok(skipped <= 6, `kontrast ölçümünden kaçan öğe sayısı düşük kalıyor (${skipped})`);
 }
 
 /* ------------------------------------- sayfa yatay kaymıyor mu
@@ -320,13 +342,14 @@ const browser = await chromium.launch();
   const spills = [];
 
   for (const lang of LANGS) {
-    const ctx = await browser.newContext({ viewport: { width: WIDTHS[0], height: 800 } });
+    const ctx = await browser.newContext({ viewport: { width: WIDTHS[0], height: 800 }, reducedMotion: "reduce" });
     const page = await ctx.newPage();
     await page.goto(BASE, { waitUntil: "domcontentloaded" });
     await page.evaluate((l) => localStorage.setItem("ad-lang", l), lang);
 
     for (const path of PAGES) {
       await page.goto(BASE + path, { waitUntil: "domcontentloaded" });
+      await page.evaluate(() => document.fonts.ready);
       for (const width of WIDTHS) {
         await page.setViewportSize({ width, height: 800 });
         const over = await page.evaluate(() => {
@@ -360,12 +383,13 @@ const browser = await chromium.launch();
   const collisions = [];
 
   for (const lang of LANGS) {
-    const ctx = await browser.newContext({ viewport: { width: WIDTHS[0], height: 800 } });
+    const ctx = await browser.newContext({ viewport: { width: WIDTHS[0], height: 800 }, reducedMotion: "reduce" });
     const page = await ctx.newPage();
     await page.goto(BASE, { waitUntil: "domcontentloaded" });
     await page.evaluate((l) => localStorage.setItem("ad-lang", l), lang);
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForSelector(".nav a[aria-current='page']");
+    await page.evaluate(() => document.fonts.ready);
 
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: 800 });
@@ -404,7 +428,7 @@ const browser = await chromium.launch();
    ekranın dörtte biri kaydırma boyunca kaybolurdu. Dar ekranda sayfayla
    akıp gitmesi, geniş ekranda yapışık kalması gerekiyor. */
 {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 800 } });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, reducedMotion: "reduce" });
   const page = await ctx.newPage();
   await page.goto(BASE, { waitUntil: "domcontentloaded" });
 
@@ -451,12 +475,13 @@ const browser = await chromium.launch();
   const tooTall = [];
 
   for (const lang of LANGS) {
-    const ctx = await browser.newContext({ viewport: { width: WIDTHS[0], height: 800 } });
+    const ctx = await browser.newContext({ viewport: { width: WIDTHS[0], height: 800 }, reducedMotion: "reduce" });
     const page = await ctx.newPage();
     await page.goto(BASE, { waitUntil: "domcontentloaded" });
     await page.evaluate((l) => localStorage.setItem("ad-lang", l), lang);
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForSelector(".masthead");
+    await page.evaluate(() => document.fonts.ready);
 
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: 800 });
@@ -516,11 +541,12 @@ const browser = await chromium.launch();
   const hidden = [];
   const clipped = [];
 
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 800 } });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, reducedMotion: "reduce" });
   const page = await ctx.newPage();
 
   for (const path of PAGES) {
     await page.goto(BASE + path, { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => document.fonts.ready);
     await page.waitForSelector(".nav [aria-current='page']");
 
     const m = await page.evaluate(() => {
@@ -557,6 +583,74 @@ const browser = await chromium.launch();
     "etkin sekmenin çizgisi kırpılmıyor" +
       (clipped.length ? ` — kırpılanlar: ${clipped.join(", ")}` : "")
   );
+}
+
+/* ------------------------------------------------ hareket ve yazı tipi
+
+   Hareket bir eklenti: motion.js .reveal sınıfını kendisi ekliyor, lamba
+   yalnızca fare olan cihazda bağlanıyor, tema değişimi View Transitions
+   ile düğmeden doğru yayılıyor. Tercih "azalt" ise bunların hiçbiri
+   olmamalı; tercih yoksa hepsi çalışıp sonunda aynı yere varmalı.
+
+   Farsça da burada: Vazirmatn uzun süre yükleniyordu ama CSS'te hiç
+   kullanılmıyordu. Artık gövde yazı tipi o. */
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+
+  await page.goto(BASE, { waitUntil: "domcontentloaded" });
+  ok((await page.locator(".reveal").count()) > 0, "hareket açıkken kayıtlar .reveal ile beliriyor");
+  await page.waitForFunction(() => document.querySelector(".hero-copy .reveal.is-in") !== null, null, { timeout: 3000 }).catch(() => {});
+  ok((await page.locator(".hero-copy .reveal.is-in").count()) > 0, "ilk ekrandaki öğeler beklemeden beliriyor");
+
+  await page.mouse.move(300, 300);
+  await page.waitForTimeout(100);
+  const mx = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--mx").trim());
+  ok(mx === "300px", `lamba imleci izliyor (--mx = ${mx})`);
+
+  const before = await page.getAttribute("html", "data-theme");
+  await page.click(".theme-toggle");
+  await page.waitForFunction((b) => document.documentElement.dataset.theme !== b, before, { timeout: 3000 }).catch(() => {});
+  const after = await page.getAttribute("html", "data-theme");
+  ok(before !== after, `animasyonlu tema geçişi de sonunda temayı değiştiriyor (${before} → ${after})`);
+  await page.waitForFunction(() => !document.documentElement.classList.contains("theme-vt"), null, { timeout: 3000 }).catch(() => {});
+  ok(!(await page.evaluate(() => document.documentElement.classList.contains("theme-vt"))), "geçiş bitince .theme-vt kalkıyor");
+
+  /* Sayfa çevirme: bağlantıya tıklayınca geçiş animasyonlu da olsa yeni
+     sayfa açılıyor. */
+  /* domcontentloaded: load olayı dış yazı tipi isteğini bekliyor, geçişle
+     ilgisi yok. */
+  await page.click('.nav a[href="notlar.html"]');
+  await page.waitForURL(/notlar\.html$/, { timeout: 5000, waitUntil: "domcontentloaded" });
+  await page.waitForSelector("[data-cat]");
+  ok((await page.locator("[data-cat]").count()) > 0, "sayfa çevirme geçişiyle yeni sayfa açılıyor");
+  const folio = await page.evaluate(() => getComputedStyle(document.querySelector(".folio-num"), "::after").content);
+  ok(folio.includes("4"), `sayfa numarası doğru (${folio})`);
+
+  await page.click('.langs [data-lang="fa"]');
+  await page.waitForTimeout(200);
+  const fa = await page.evaluate(() => ({
+    body: getComputedStyle(document.body).fontFamily,
+    h2: getComputedStyle(document.querySelector(".rail-item h2")).letterSpacing,
+    folio: getComputedStyle(document.querySelector(".folio-num"), "::after").content,
+  }));
+  ok(fa.body.includes("Vazirmatn"), "Farsça'da gövde Vazirmatn'a geçiyor");
+  ok(fa.h2 === "normal", "Farsça'da başlık harf aralığı sıkıştırılmıyor");
+  ok(fa.folio.includes("۴"), `Farsça'da sayfa numarası Farsça rakam (${fa.folio})`);
+
+  ok(errors.length === 0, "hareket açıkken konsolda hata yok" + (errors.length ? ": " + errors[0] : ""));
+  await ctx.close();
+
+  const still = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: "reduce" });
+  const quiet = await still.newPage();
+  await quiet.goto(BASE, { waitUntil: "domcontentloaded" });
+  await quiet.mouse.move(300, 300);
+  await quiet.waitForTimeout(100);
+  ok((await quiet.locator(".reveal").count()) === 0, "hareket azaltılmışken hiçbir şey gizlenmiyor");
+  ok(!(await quiet.evaluate(() => document.documentElement.classList.contains("has-lamp"))), "hareket azaltılmışken lamba bağlanmıyor");
+  await still.close();
 }
 
 /* ----------------------------------------------------------- klavye */

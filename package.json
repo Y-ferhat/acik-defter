@@ -13,8 +13,7 @@
     "dev": "http-server -p 8080 -c-1 .",
     "check": "node tools/check.mjs",
     "test": "node tools/test.mjs",
-    "images": "node tools/make-images.mjs",
-    "wave": "node tools/make-wave.mjs"
+    "images": "node tools/make-images.mjs"
   },
   "devDependencies": {
     "http-server": "^14.1.1",

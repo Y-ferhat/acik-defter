@@ -22,6 +22,7 @@ const translations = {
     nav_about: "Hakkımda",
     aria_theme: "Temayı değiştir",
     aria_lang: "Dili değiştir",
+    aria_nav: "Sayfalar",
 
     title_home: "Farhad Yaqoobi — Açık Defter",
     title_journey: "Yolculuğum — Açık Defter",
@@ -271,6 +272,7 @@ const translations = {
     nav_about: "About",
     aria_theme: "Switch theme",
     aria_lang: "Change language",
+    aria_nav: "Pages",
 
     title_home: "Farhad Yaqoobi — Open Notebook",
     title_journey: "Journey — Open Notebook",
@@ -515,6 +517,7 @@ const translations = {
     nav_about: "Über mich",
     aria_theme: "Design wechseln",
     aria_lang: "Sprache wechseln",
+    aria_nav: "Seiten",
 
     title_home: "Farhad Yaqoobi — Offenes Heft",
     title_journey: "Mein Weg — Offenes Heft",
@@ -759,6 +762,7 @@ const translations = {
     nav_about: "درباره من",
     aria_theme: "تغییر پوسته",
     aria_lang: "تغییر زبان",
+    aria_nav: "صفحه‌ها",
 
     title_home: "فرهاد یعقوبی — دفتر باز",
     title_journey: "مسیر من — دفتر باز",
