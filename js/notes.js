@@ -20,13 +20,25 @@
     var empty = document.querySelector(".empty");
     var active = "all";
 
-    function render() {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function render(animate) {
       var visible = 0;
 
       notes.forEach(function (note) {
         var match = active === "all" || note.getAttribute("data-cat") === active;
+        /* Gizleme anında: display:none. Yalnızca kalanlar kağıda yeniden
+           yazılıyormuş gibi beliriyor; süzgecin sonucu hiçbir zaman
+           animasyonu beklemiyor. */
         note.classList.toggle("is-hidden", !match);
-        if (match) visible++;
+        if (!match) return;
+        if (animate && !reduce && typeof note.animate === "function") {
+          note.animate(
+            [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }],
+            { duration: 320, delay: Math.min(visible, 8) * 45, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "backwards" }
+          );
+        }
+        visible++;
       });
 
       buttons.forEach(function (b) {
@@ -47,14 +59,14 @@
     buttons.forEach(function (b) {
       b.addEventListener("click", function () {
         active = b.getAttribute("data-filter");
-        render();
+        render(true);
       });
     });
 
     /* Dil değişince tekil/çoğul etiketi de yenilenmeli. */
-    document.addEventListener("site:lang", render);
+    document.addEventListener("site:lang", function () { render(false); });
 
-    render();
+    render(false);
   }
 
   if (document.readyState === "loading") {

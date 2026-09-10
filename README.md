@@ -5,6 +5,25 @@ Kişisel sitem ve öğrenme günlüğüm — <https://ferhat-yasinoglu.github.io
 Çerçeve yok, derleme adımı yok, paket bağımlılığı yok. Düz HTML, CSS ve
 JavaScript; GitHub Pages dosyaları olduğu gibi yayınlıyor.
 
+## Nasıl görünüyor
+
+Site bir masanın üzerinde duran çizgili okul defteri: kağıt zemin, ince
+satır çizgileri, kırmızı marj, dikişli sırt, kapaktan sarkan renkli ayraç
+sekmeleri, marjda el yazısıyla kayıt numaraları, sayfaya yapıştırılmış sarı
+not ve bantlanmış fiş kartları. Koyu tema aynı defterin masa lambası
+altındaki hâli.
+
+Hareket bir eklenti, varsayılan değil: sayfalar arasında sayfa çevirme
+geçişi (CSS view transitions), başlıkların altında mürekkeple çizilen hat,
+kaydırınca beliren kayıtlar, imleci izleyen lamba ışığı, tema değişince
+düğmeden doğru yayılan ışık. `prefers-reduced-motion` açıkken hepsi durur;
+JavaScript kapalıyken hiçbir şey gizli kalmaz.
+
+Yazı tipleri: Newsreader (başlık ve düz yazı), Inter (arayüz), Caveat (el
+yazısı süsler), Vazirmatn (Farsça). Renkler ve dokular `css/style.css`
+başında anlatılıyor; doku ve satır çizgileri yalnızca sözde öğelerde durur
+ki kontrast testi metni ölçmeye devam etsin.
+
 ## Neler var
 
 - **Dört dil** — Türkçe, İngilizce, Almanca, Farsça. Metinlerin tamamı
@@ -27,8 +46,9 @@ ogrenme.html  iletisim.html  eski adresler için yönlendirme
 
 css/style.css   tek stil dosyası
 js/i18n.js      dört dilin sözlüğü
-js/site.js      dil, tema, dil menüsü
+js/site.js      dil, tema, etkin sekme
 js/notes.js     notlar sayfasındaki süzgeç
+js/motion.js    belirme, lamba ışığı
 sw.js           service worker
 
 tools/check.mjs        tutarlılık denetimi (aşağıya bak)
@@ -91,9 +111,11 @@ npm test
 ```
 
 Süzgeci, açılır bölümleri, tema ve dilin sayfa geçişinde korunmasını,
-JavaScript kapalıyken sayfanın okunabilirliğini, klavyeyle gezinmeyi ve
-service worker'ın çevrimdışı gerçekten çalıştığını denetler. Kendi statik
-sunucusunu açar, ayrıca bir şey çalıştırmak gerekmez.
+JavaScript kapalıyken sayfanın okunabilirliğini, klavyeyle gezinmeyi,
+metin kontrastını, dokunma hedeflerini, dar ekranda taşmayı, hareketin
+yalnızca istenince çalışmasını ve service worker'ın çevrimdışı gerçekten
+çalıştığını denetler. Kendi statik sunucusunu açar, ayrıca bir şey
+çalıştırmak gerekmez.
 
 Her iki script de her push'ta GitHub Actions'ta çalışıyor.
 
@@ -103,14 +125,11 @@ Ambleme ya da renklere dokunduysan:
 
 ```sh
 npm run images     # icon-*.png, apple-touch-icon.png, og.png
-npm run wave       # img/wave.svg — giriş bölümünün arkasındaki nokta dalgası
 ```
 
-`images` Playwright'a ihtiyaç duyar; `wave` yalnızca Node ile çalışır.
-Çıktılar depoya commit'lenir, siteyi yayınlamak için bu adım gerekmez.
-
-Dalganın yoğunluğunu, rengini ve eğrilerini `tools/make-wave.mjs`
-başındaki birkaç sayı belirliyor.
+Playwright'a ihtiyaç duyar. Çıktılar depoya commit'lenir, siteyi yayınlamak
+için bu adım gerekmez. Kağıt dokusu ve satır çizgileri görsel dosyası değil,
+`css/style.css` içinde birkaç satır CSS.
 
 ### Bir şey değiştirince
 
