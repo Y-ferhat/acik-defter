@@ -337,6 +337,9 @@ main { flex: 1 0 auto; position: relative; }
   border-block-end: 2px dashed var(--edge-2);
   overflow-x: clip;
 }
+/* Koyu kuvertür zemininde klavye odak halkası --blue ile görünmez (1.71:1);
+   açık krem kullan. */
+.masthead :focus-visible { outline-color: var(--cream); }
 @media (min-width: 900px) { .masthead { border-start-start-radius: 3px; border-start-end-radius: 3px; } }
 
 /* Dar ekranda çubuk iki satır: ad ile düğmeler yan yana, sekmeler kendi
@@ -1155,6 +1158,18 @@ body[data-page='privacy'] .folio-num::after { content: '6 —'; }
   opacity: 1;
   transform: none;
   transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+/* Bileşenlerin kendi geçiş listeleri .reveal.is-in kısaltması tarafından
+   ezilmesin diye özgüllük arttırılmış kurallar: hover animasyonları sağlam kalır. */
+.pcard.reveal.is-in {
+  transition: translate 0.35s var(--ease), rotate 0.35s var(--ease), box-shadow 0.35s ease,
+              opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.noteitem.reveal.is-in {
+  transition: translate 0.3s var(--ease), opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.now-band.reveal.is-in {
+  transition: rotate 0.4s var(--ease), opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
 }
 
 /* Mürekkep çizgisi: .ink-line başlıklar için başta boş, .is-in ile çiziliyor. */
